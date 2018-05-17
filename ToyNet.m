@@ -1,4 +1,6 @@
-classdef ToyNet
+% This neural network is based on the publication by Catherine F. Higham and Desmond J. Higham
+
+classdef ToyNet < handle
     properties
         numHiddenLayers;
         inputLayerSize;
@@ -49,9 +51,6 @@ classdef ToyNet
             obj.arrayWeights{obj.totalNumLayers} = WN;
             obj.arrayBiases{obj.totalNumLayers} = bN;
 
-            % disp(obj.Y);
-            % disp(obj.arrayWeights);
-
         end
 
 
@@ -66,13 +65,13 @@ classdef ToyNet
                 obj.Y{i} = activFunc(obj.Y{i-1}, obj.arrayWeights{i}, obj.arrayBiases{i});
             end
 
-            result = obj.Y{obj.totalNumLayers};
+            result = obj.Y;
 
         end
 
 
         % Back propagation
-        function backresult = backprop(label_vector)
+        function backresult = backProp(obj, i_vector, label_vector,eta)
             % Backward pass
             YN = obj.totalNumLayers;
             obj.D{YN} = obj.Y{YN} .* (1 - obj.Y{YN}) .* (obj.Y{YN} - label_vector);
@@ -85,19 +84,11 @@ classdef ToyNet
             obj.arrayWeights{2} = obj.arrayWeights{2} - eta * obj.D{2} * i_vector';
 
             for i = 3:YN
-                obj.arrayWeights{i} = obj.arrayWeights{i} - eta * obj.D{i} * obj.Y{i - 1}
+                obj.arrayWeights{i} = obj.arrayWeights{i} - eta * obj.D{i} * obj.Y{i - 1}';
             end
 
-            % delta4 = a4.*(1-a4).*(a4-y(:,k));    % derivSigmra*derivCostWRTa4
-            %
-            % delta3 = a3.*(1-a3).*(W4'*delta4);
-            % delta2 = a2.*(1-a2).*(W3'*delta3);
-            %
-            % % Gradient step
-            % W2 = W2 - eta*delta2*x';    % weight - deriv of a weight
-            % W3 = W3 - eta*delta3*a2';
-            % W4 = W4 - eta*delta4*a3';
         end
+
 
     end
 end
