@@ -6,7 +6,8 @@ classdef ToyNet
         hiddenLayersSize;
         arrayWeights;
         arrayBiases;
-        Y;      % An array Y stores activation layaer vectors
+        totalNumLayers;
+        Y;      % An array Y stores  layaer vectors
         D;      % An arrat that stores Delta vectors. Delta represent the derivative of of the CostFunction w.r.t. z vector (z = Wa+b)
     end
 
@@ -14,7 +15,7 @@ classdef ToyNet
         % ToyNet constructor
         function obj = ToyNet(i_numHiddenLayers, i_inputLayerSize, i_outputLayerSize, i_hiddenLayersSize)
             obj.numHiddenLayers = i_numHiddenLayers;
-            obj.inputLayerSize = i_numHiddenLayers;
+            obj.inputLayerSize = i_inputLayerSize;
             obj.outputLayerSize = i_outputLayerSize;
             obj.hiddenLayersSize = i_hiddenLayersSize;
             obj.totalNumLayers = i_numHiddenLayers + 2;
@@ -33,6 +34,7 @@ classdef ToyNet
             obj.arrayWeights{2} = W2;
             obj.arrayBiases{2} = b2;
 
+
             % Build intermediate W and b
             for i = 3:obj.totalNumLayers - 1   % do not build W and b from last hidden layer to output layer
                 W = 0.5*rand(obj.hiddenLayersSize, obj.hiddenLayersSize);
@@ -44,23 +46,27 @@ classdef ToyNet
             % Build W and b from last hidden layer to output layer
             WN = 0.5*rand(obj.outputLayerSize, obj.hiddenLayersSize);
             bN = 0.5*rand(obj.outputLayerSize, 1);
-            obj.arrayWeights{i + 1} = WN;
-            obj.arrayBiases{i + 1} = bN;
+            obj.arrayWeights{obj.totalNumLayers} = WN;
+            obj.arrayBiases{obj.totalNumLayers} = bN;
+
+            % disp(obj.Y);
+            % disp(obj.arrayWeights);
 
         end
 
 
         % Forward propagation
-        function result = forwardProp(i_vector)
-            % activate first hidden layer
-            obj.Y{2} = activate(i_vector, obj.arrayWeights{2}, obj.arrayBiases{2});
+        function result = forwardProp(obj, i_vector)
 
-            % activate other consequent layers plus output layer
+            % activFunc first hidden layer
+            obj.Y{2} = activFunc(i_vector, obj.arrayWeights{2}, obj.arrayBiases{2});
+
+            % activFunc other consequent layers plus output layer
             for i = 3:obj.totalNumLayers
-                obj.Y{i} = activate(a, obj.arrayWeights{i}, obj.arrayBiases{i});
+                obj.Y{i} = activFunc(obj.Y{i-1}, obj.arrayWeights{i}, obj.arrayBiases{i});
             end
 
-            result = a;
+            result = obj.Y{obj.totalNumLayers};
 
         end
 
@@ -93,18 +99,18 @@ classdef ToyNet
             % W4 = W4 - eta*delta4*a3';
         end
 
-
-
-        % Activation function
-        function y = activate(x,W,b)
-            %ACTIVATE Evaluates sigmoid function.
-            %
-            % x is the input vector, y is the output vector
-            % W contains the weights, b contains the shifts
-            %
-            % The ith component of y is activate((Wx+b)_i)
-            % where activate(z) = 1/(1+exp(-z))
-                y = 1./(1+exp(-(W*x+b)));
-        end
     end
+end
+
+
+%  activation function
+function y = activFunc(x, W, b)
+    %activFunc Evaluates sigmoid function.
+    %
+    % x is the input vector, y is the output vector
+    % W contains the weights, b contains the shifts
+    %
+    % The ith component of y is activFunc((Wx+b)_i)
+    % where activFunc(z) = 1/(1+exp(-z))
+    y = 1./(1+exp(-(W*x+b)));
 end
