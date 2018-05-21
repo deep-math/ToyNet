@@ -21,7 +21,7 @@ classdef ToyNet < handle
             obj.outputLayerSize = i_outputLayerSize;
             obj.hiddenLayersSize = i_hiddenLayersSize;
             obj.totalNumLayers = i_numHiddenLayers + 2;
-            rng(5000); % seed generator
+%             rng(5000); % seed generator
 
             % Init arrays
             obj.D{1} = 0;
@@ -30,8 +30,8 @@ classdef ToyNet < handle
             obj.D{2} = zeros(obj.hiddenLayersSize, 1);    % init array D as matrix with all enries 0
 
             % Build W2, b2 for connections from input layer to first hidden
-            W2 = 0.5*rand(obj.hiddenLayersSize, obj.inputLayerSize);
-            b2 = 0.5*rand(obj.hiddenLayersSize,1);
+            W2 = 0.5*ones(obj.hiddenLayersSize, obj.inputLayerSize);
+            b2 = 0.5*ones(obj.hiddenLayersSize,1);
 
             obj.arrayWeights{2} = W2;
             obj.arrayBiases{2} = b2;
@@ -39,15 +39,15 @@ classdef ToyNet < handle
 
             % Build intermediate W and b
             for i = 3:obj.totalNumLayers - 1   % do not build W and b from last hidden layer to output layer
-                W = 0.5*rand(obj.hiddenLayersSize, obj.hiddenLayersSize);
-                b = 0.5*rand(obj.hiddenLayersSize,1);
+                W = 0.5*ones(obj.hiddenLayersSize, obj.hiddenLayersSize);
+                b = 0.5*ones(obj.hiddenLayersSize,1);
                 obj.arrayWeights{i} = W;
                 obj.arrayBiases{i} = b;
             end
 
             % Build W and b from last hidden layer to output layer
-            WN = 0.5*rand(obj.outputLayerSize, obj.hiddenLayersSize);
-            bN = 0.5*rand(obj.outputLayerSize, 1);
+            WN = 0.5*ones(obj.outputLayerSize, obj.hiddenLayersSize);
+            bN = 0.5*ones(obj.outputLayerSize, 1);
             obj.arrayWeights{obj.totalNumLayers} = WN;
             obj.arrayBiases{obj.totalNumLayers} = bN;
 
@@ -71,23 +71,60 @@ classdef ToyNet < handle
 
 
         % Back propagation
-        function backresult = backProp(obj, i_vector, label_vector,eta)
+        function backresult = backProp(obj, i_vector, label_vector, eta)
             % Backward pass
             YN = obj.totalNumLayers;
+
+            % Calculate the last layer error gradient dC/dZ
             obj.D{YN} = obj.Y{YN} .* (1 - obj.Y{YN}) .* (obj.Y{YN} - label_vector);
 
+            % Calculate error gradient for L-1, L-2,..., 2 layers
             for i = YN-1:-1:2
                 obj.D{i} = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.D{i+1});
             end
 
-            % Gradient step
+            % disp({'NN delta2' obj.D{YN} 'NN delta1' obj.D{YN-1}});
+
+            % Gradient step. Update weights and biases
             obj.arrayWeights{2} = obj.arrayWeights{2} - eta * obj.D{2} * i_vector';
+            obj.arrayBiases{2} = obj.arrayBiases{2} - eta* obj.D{2};
 
             for i = 3:YN
                 obj.arrayWeights{i} = obj.arrayWeights{i} - eta * obj.D{i} * obj.Y{i - 1}';
+                obj.arrayBiases{i} = obj.arrayBiases{i} - eta *obj.D{i};
+            end
+
+            disp({'NN W2' obj.arrayWeights{2} 'NN b2' obj.arrayBiases{2}});
+            disp({'NN W3' obj.arrayWeights{3} 'NN b3' obj.arrayBiases{3}});
+        end
+
+        % Training
+        function trainingRes = train(obj, trainData, trainLabel, cycles, eta)
+            [vecSize, numVecs] = size(trainData);
+
+            for i = 1:cycles
+                randInd = randi(numVecs);
+                x = trainData(:, randInd);
+                y = trainLabel(:, randInd);
+                forwardProp(obj, x);
+                backProp(obj, x, y, eta);
             end
 
         end
+
+        % Classify the input x
+        function cc = classify(obj, x)
+            listLayers = forwardProp(obj, x);
+            [numRows, numCols] = size(listLayers);
+            cc = listLayers(numCols);
+        end
+
+        % function costResult = cost(obj, x, y)
+        %     layersList = forwardProp(obj, x);
+        %     [listRows, listCols] = size(layersList);
+        %     lastActivLayer = layersList[listCols];
+        %     costvec(i) = norm(y(:,i) - a4, 2);
+        % end
 
 
     end
