@@ -21,7 +21,7 @@ classdef ToyNet < handle
             obj.outputLayerSize = i_outputLayerSize;
             obj.hiddenLayersSize = i_hiddenLayersSize;
             obj.totalNumLayers = i_numHiddenLayers + 2;
-%           rng(5000); % seed generator
+            % rng(5000); % seed generator
             initScaler = 0.1;
             % Init arrays
             obj.D{1} = 0;
@@ -94,8 +94,26 @@ classdef ToyNet < handle
                 obj.arrayBiases{i} = obj.arrayBiases{i} - eta *obj.D{i};
             end
 
-            % disp({'NN W2' obj.arrayWeights{2} 'NN b2' obj.arrayBiases{2}});
-            % disp({'NN W3' obj.arrayWeights{3} 'NN b3' obj.arrayBiases{3}});
+        end
+
+
+
+        % Adversarial back prop
+        function perturbedVector = adversBackProp(obj, i_vector, label_vector, eta)
+            % Backward pass
+            YN = obj.totalNumLayers;
+
+            % Calculate the last layer error gradient dC/dZ
+            obj.D{YN} = obj.Y{YN} .* (1 - obj.Y{YN}) .* (obj.Y{YN} - label_vector);
+
+            % Calculate error gradient for L-1, L-2,..., 2 layers
+            for i = YN-1:-1:2
+                obj.D{i} = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.D{i+1});
+            end
+
+            % Gradient on the i_vector
+            perturbedVector = i_vector + eta*obj.arrayWeights{2}'*obj.D{2};
+
         end
 
         % Training
@@ -119,12 +137,14 @@ classdef ToyNet < handle
             cc = listLayers(numCols);
         end
 
-        % function costResult = cost(obj, x, y)
-        %     layersList = forwardProp(obj, x);
-        %     [listRows, listCols] = size(layersList);
-        %     lastActivLayer = layersList[listCols];
-        %     costvec(i) = norm(y(:,i) - a4, 2);
-        % end
+        function delta = getDelta(obj, id)
+            delta = obj.D{id};
+        end
+
+        function weights = getWeights(obj, id)
+            weights = obj.arrayWeights(id);
+            weights = weights{1};
+        end
 
 
     end
