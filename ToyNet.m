@@ -75,7 +75,10 @@ classdef ToyNet < handle
             % Backward pass
             YN = obj.totalNumLayers;
 
-            % Calculate the last layer error gradient dC/dZ
+            % Calculate dY/dZ
+            obj.dydz{YN} = obj.Y{YN} .* (1 - obj.Y{YN});
+
+            % Calculate the last layer error gradient dC/dZ = dC/dY * dY/dz
             obj.D{YN} = obj.Y{YN} .* (1 - obj.Y{YN}) .* (obj.Y{YN} - label_vector);
 
             % Calculate error gradient for L-1, L-2,..., 2 layers
@@ -83,7 +86,7 @@ classdef ToyNet < handle
                 obj.D{i} = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.D{i+1});
             end
 
-            % disp({'NN delta2' obj.D{YN} 'NN delta1' obj.D{YN-1}});
+            backresult = obj.D;
 
             % Gradient step. Update weights and biases
             obj.arrayWeights{2} = obj.arrayWeights{2} - eta * obj.D{2} * i_vector';
@@ -97,23 +100,11 @@ classdef ToyNet < handle
         end
 
 
-
         % Adversarial back prop
-        function perturbedVector = adversBackProp(obj, i_vector, label_vector, eta)
-            % Backward pass
-            YN = obj.totalNumLayers;
-
-            % Calculate the last layer error gradient dC/dZ
-            obj.D{YN} = obj.Y{YN} .* (1 - obj.Y{YN}) .* (obj.Y{YN} - label_vector);
-
-            % Calculate error gradient for L-1, L-2,..., 2 layers
-            for i = YN-1:-1:2
-                obj.D{i} = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.D{i+1});
-            end
-
-            % Gradient on the i_vector
-            perturbedVector = i_vector + eta*obj.arrayWeights{2}'*obj.D{2};
-
+        function perturbedVector = adversBackProp(obj, i_vector)
+            % Gradient w.r.t the i_vector
+            perturbator = eta*obj.arrayWeights{2}'*obj.D{2};
+            perturbedVector = i_vector + perturbator;
         end
 
         % Training
@@ -132,9 +123,8 @@ classdef ToyNet < handle
 
         % Classify the input x
         function cc = classify(obj, x)
-            listLayers = forwardProp(obj, x);
-            [numRows, numCols] = size(listLayers);
-            cc = listLayers(numCols);
+            arrayY = forwardProp(obj, x);
+            cc = arraY{end};
         end
 
         function delta = getDelta(obj, id)
