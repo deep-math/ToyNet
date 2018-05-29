@@ -101,18 +101,18 @@ classdef ToyNet < handle
 
 
         %  Compute derivate dY_i/dx
-        function dYdx = computdYdZ(obj, Yid)
+        function dYdx = computedYdX(obj, Yid)
             dYdZ = 0;
             YN = obj.totalNumLayers;
 
             % Calculate the last layer gradient dY/dZ
-            obj.DY{YN} = obj.Y{YN} .*(1-obj.Y{YN});
+            obj.DY{YN} = obj.Y{YN}(Yid)*(1-obj.Y{YN}(Yid));
             % Calculate the L-1 layer gradient dY_i/dZ
-            obj.DY{YN-1} = obj.DY{YN}(Yid) * obj.arrayWeights{YN}(Yid,:) .* obj.Y{YN-1} .* (1 - obj.Y{YN-1})
+            obj.DY{YN-1} = obj.DY{YN} * obj.arrayWeights{YN}(Yid,:) .* obj.Y{YN-1} .* (1 - obj.Y{YN-1})
 
             for i = YN-2:-1:2
                 % Calculate error for dY/dZ
-                dYdZ = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.DY{i+1});
+                dYdZ = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.DY{i+2});
             end
 
             dYdx = obj.arrayWeights{2}'*dYdZ;
