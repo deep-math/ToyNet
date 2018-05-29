@@ -9,6 +9,7 @@ classdef ToyNet < handle
         arrayWeights;
         arrayBiases;
         totalNumLayers;
+        DY;     % An array of derivatives dY/Dz  , i.e derivative of output neuron w.r.t. z
         Y;      % An array Y stores  layaer vectors
         D;      % An arrat that stores Delta vectors. Delta represent the derivative of of the CostFunction w.r.t. z vector (z = Wa+b)
     end
@@ -26,6 +27,7 @@ classdef ToyNet < handle
             % Init arrays
             obj.D{1} = 0;
             obj.Y{1} = 0;
+            obj.DY{1} = 0;
             obj.Y{2} = zeros(obj.hiddenLayersSize, 1);    % init array Y as matrix with all enries 0
             obj.D{2} = zeros(obj.hiddenLayersSize, 1);    % init array D as matrix with all enries 0
 
@@ -70,15 +72,12 @@ classdef ToyNet < handle
         end
 
 
-        % Back propagation
-        function backresult = backProp(obj, i_vector, label_vector, eta)
+        % Back propagation. Inputs: self, training vector, label vector, learning rate, id for dY/dZ where Y some neuron in the last layer
+        function backresult = backProp(obj, i_vector, label_vector, eta, updateWeights)
             % Backward pass
             YN = obj.totalNumLayers;
 
-            % Calculate dY/dZ
-            obj.dydz{YN} = obj.Y{YN} .* (1 - obj.Y{YN});
-
-            % Calculate the last layer error gradient dC/dZ = dC/dY * dY/dz
+            % Calculate the last layer error gradient dC/dZ
             obj.D{YN} = obj.Y{YN} .* (1 - obj.Y{YN}) .* (obj.Y{YN} - label_vector);
 
             % Calculate error gradient for L-1, L-2,..., 2 layers
@@ -86,26 +85,48 @@ classdef ToyNet < handle
                 obj.D{i} = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.D{i+1});
             end
 
-            backresult = obj.D;
+            backresult = obj.D{2};
 
-            % Gradient step. Update weights and biases
-            obj.arrayWeights{2} = obj.arrayWeights{2} - eta * obj.D{2} * i_vector';
-            obj.arrayBiases{2} = obj.arrayBiases{2} - eta* obj.D{2};
+            if updateWeights == true
+                % Gradient step. Update weights and biases
+                obj.arrayWeights{2} = obj.arrayWeights{2} - eta * obj.D{2} * i_vector';
+                obj.arrayBiases{2} = obj.arrayBiases{2} - eta* obj.D{2};
 
-            for i = 3:YN
-                obj.arrayWeights{i} = obj.arrayWeights{i} - eta * obj.D{i} * obj.Y{i - 1}';
-                obj.arrayBiases{i} = obj.arrayBiases{i} - eta *obj.D{i};
+                for i = 3:YN
+                    obj.arrayWeights{i} = obj.arrayWeights{i} - eta * obj.D{i} * obj.Y{i - 1}';
+                    obj.arrayBiases{i} = obj.arrayBiases{i} - eta *obj.D{i};
+                end
+            end
+        end
+
+
+        %  Compute derivate dY_i/dx
+        function dYdx = computdYdZ(obj, Yid)
+            dYdZ = 0;
+            YN = obj.totalNumLayers;
+
+            % Calculate the last layer gradient dY/dZ
+            obj.DY{YN} = obj.Y{YN} .*(1-obj.Y{YN});
+            % Calculate the L-1 layer gradient dY_i/dZ
+            obj.DY{YN-1} = obj.DY{YN}(Yid) * obj.arrayWeights{YN}(Yid,:) .* obj.Y{YN-1} .* (1 - obj.Y{YN-1})
+
+            for i = YN-2:-1:2
+                % Calculate error for dY/dZ
+                dYdZ = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.DY{i+1});
             end
 
+            dYdx = obj.arrayWeights{2}'*dYdZ;
         end
 
 
         % Adversarial back prop
-        function perturbedVector = adversBackProp(obj, i_vector)
+        function perturbedVector = adversBackProp(obj, i_vector,label_vector,eta)
             % Gradient w.r.t the i_vector
+            backProp(obj, i_vector, label_vector, eta, false);
             perturbator = eta*obj.arrayWeights{2}'*obj.D{2};
             perturbedVector = i_vector + perturbator;
         end
+
 
         % Training
         function trainingRes = train(obj, trainData, trainLabel, cycles, eta)
@@ -116,7 +137,7 @@ classdef ToyNet < handle
                 x = trainData(:, randInd);
                 y = trainLabel(:, randInd);
                 forwardProp(obj, x);
-                backProp(obj, x, y, eta);
+                backProp(obj, x, y, eta, true);
             end
 
         end
@@ -124,7 +145,7 @@ classdef ToyNet < handle
         % Classify the input x
         function cc = classify(obj, x)
             arrayY = forwardProp(obj, x);
-            cc = arraY{end};
+            cc = arrayY{end};
         end
 
         function delta = getDelta(obj, id)
@@ -135,8 +156,6 @@ classdef ToyNet < handle
             weights = obj.arrayWeights(id);
             weights = weights{1};
         end
-
-
     end
 end
 

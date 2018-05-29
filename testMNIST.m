@@ -30,12 +30,16 @@ end
 % Pick image then classify image and print result in the console.
 index = 33;     % Pick some image by its index
 testImg =  validatimages(:,index);
-
+[~,digitNumber] = max(validatLabels(:,index))
 perturbedImg = testImg;
+classifRes = ones(10,1);
 
-for i=1:50000
+while classifRes(digitNumber) > 0.3
+    disp('working...');
     forwardProp(tn, perturbedImg);
-    perturbedImg = adversBackProp(tn, perturbedImg, validatLabels(:,index), 0.015 );
+    perturbedImg = adversBackProp(tn, perturbedImg,validatLabels(:,index), 0.002);
+    classifRes = classify(tn, perturbedImg);
+    classifRes(digitNumber)
 end
 
 % Didsplay picked image
@@ -57,9 +61,9 @@ digit = reshape(noisyImg, [28,28]);    % row = 28 x 28 image
 imshow(digit*255,[0 255])      % show the image
 title('random noise');
 
-classificationResultPerturb = classify(tn, perturbedImg);
-classificationResultOrig = classify(tn, testImg);
-classificationResultNoisy = classify(tn, noisyImg);
-celldisp(classificationResultPerturb)
-celldisp(classificationResultOrig)
-celldisp(classificationResultNoisy)
+classificationResultPerturb = classify(tn, perturbedImg)
+classificationResultOrig = classify(tn, testImg)
+classificationResultNoisy = classify(tn, noisyImg)
+% celldisp(classificationResultPerturb)
+% celldisp(classificationResultOrig)
+% celldisp(classificationResultNoisy)
