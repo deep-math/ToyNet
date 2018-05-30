@@ -36,8 +36,9 @@ classifRes = ones(10,1);
 
 disp('working...');
 while classifRes(digitNumber) > 0.5
+% for i=1:500000
     forwardProp(tn, perturbedImg);
-    perturbedImg = adversBackProp(tn, perturbedImg,validatLabels(:,index), 0.1);
+    perturbedImg = adversBackProp(tn, perturbedImg,validatLabels(:,index), 0.5);
     classifRes = forwardProp(tn, perturbedImg);
     classifRes(digitNumber);
 end
