@@ -67,7 +67,7 @@ classdef ToyNet < handle
                 obj.Y{i} = activFunc(obj.Y{i-1}, obj.arrayWeights{i}, obj.arrayBiases{i});
             end
 
-            result = obj.Y;
+            result = obj.Y{end};
 
         end
 
@@ -107,14 +107,14 @@ classdef ToyNet < handle
 
             % Calculate the last layer gradient dY/dZ
             obj.DY{YN} = obj.Y{YN}(Yid)*(1-obj.Y{YN}(Yid));
+
             % Calculate the L-1 layer gradient dY_i/dZ
-            obj.DY{YN-1} = obj.DY{YN} * obj.arrayWeights{YN}(Yid,:) .* obj.Y{YN-1} .* (1 - obj.Y{YN-1})
+            obj.DY{YN-1} = obj.DY{YN} * obj.arrayWeights{YN}(Yid,:)' .* obj.Y{YN-1} .* (1 - obj.Y{YN-1});
 
             for i = YN-2:-1:2
                 % Calculate error for dY/dZ
-                dYdZ = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.DY{i+2});
+                dYdZ = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.DY{i+1});
             end
-
             dYdx = obj.arrayWeights{2}'*dYdZ;
         end
 
@@ -140,12 +140,6 @@ classdef ToyNet < handle
                 backProp(obj, x, y, eta, true);
             end
 
-        end
-
-        % Classify the input x
-        function cc = classify(obj, x)
-            arrayY = forwardProp(obj, x);
-            cc = arrayY{end};
         end
 
         function delta = getDelta(obj, id)
