@@ -1,21 +1,16 @@
-% Prep training data
-trainImages = loadMNISTImages('mnist/train-images.idx3-ubyte');
-trainLabels = loadMNISTLabels('mnist/train-labels.idx1-ubyte');
-trainLabels = trainLabels';
-trainLabels(trainLabels==0) = 10;    % replace all 0 with 10
-trainLabels = dummyvar(trainLabels)';      % make a matrix 60000x10
+%
+% benchmarking.m gets ToyNet's performance data
+%
 
-% Load validation data
-validatimages = loadMNISTImages('mnist/t10k-images.idx3-ubyte');
-validatLabels = loadMNISTLabels('mnist/t10k-labels.idx1-ubyte');
-validatLabels = validatLabels';
-validatLabels(validatLabels==0) = 10;    % replace all 0 with 10
-validatLabels = dummyvar(validatLabels)';      % make a matrix 60000x10
+clear;
+[trainImages,trainLabels, validatimages, validatLabels] = loadMNIST('mnist/train-images.idx3-ubyte', 'mnist/train-labels.idx1-ubyte','mnist/t10k-images.idx3-ubyte','mnist/t10k-labels.idx1-ubyte');
 
-first_time_launch = false;
+load('resources/trainedToyNet_v01');    % Load pretrained ToyNet
+
+retrain = false;
 
 % Train the network
-if first_time_launch == true
+if retrain == true
     disp('training...');
     % Init NN and train it
     tn = ToyNet(2,784,10,200);    % Input params: i_numHiddenLayers, i_inputLayerSize, i_outputLayerSize, i_hiddenLayersSize
@@ -36,6 +31,7 @@ disp('benchmarking running...');
 
 trainCycles = 60000;
 validCycles = 10000;
+
 % Training benchmarking
 for i=1:trainCycles
     %  Compute training cost using 2-norm
