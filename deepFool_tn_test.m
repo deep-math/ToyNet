@@ -7,7 +7,6 @@ clear;
 load('resources/trainedToyNet_v01');    % Load pretrained ToyNet
 
 dYdX = computedYdX(tn,1);
-size(dYdX)
 
 % Pick image then classify image and print result in the console.
 index = 33;     % Pick some image by its index

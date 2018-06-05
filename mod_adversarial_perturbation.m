@@ -22,10 +22,10 @@ function adv = mod_adversarial_perturbation(x,l,Df_base,f_out,tn,eta,opts)
     end
 
     Df = @(y,l,idx,eta,tn) Df_base(y,l,idx,eta,tn);
-    ff = f_out(x,0,tn)
+    ff = f_out(x,0,tn);
     ff = ff-ff(l);      % store difference between every classification and classification of interest
-    [~,I] = sort(ff,'descend')     % sort in descending order, store indexes of original data placement in I
-    labels = I(2:NUM_LABELS)      % get all sorted indexes from 2 to 10
+    [~,I] = sort(ff,'descend');     % sort in descending order, store indexes of original data placement in I
+    labels = I(2:NUM_LABELS);      % get all sorted indexes from 2 to 10
 
     r = x*0;    % initiate r as 0 vec of size x vec
     x_u = x;
@@ -37,7 +37,7 @@ function adv = mod_adversarial_perturbation(x,l,Df_base,f_out,tn,eta,opts)
 
         ff = f_out(x_u,0,tn);
         ff = ff-ff(l);
-        idx = [l labels]   % put the label of interest on the first place and sorted indeces follow
+        idx = [l labels];   % put the label of interest on the first place and sorted indeces follow
         ddf = Df(x_u,l,idx,eta,tn);
         dr = project_boundary_polyhedron(ddf,ff(idx),Q);
 
@@ -53,9 +53,7 @@ end
 function dir = project_boundary_polyhedron(Df,f,Q)
 
 res = abs(f)./arrayfun(@(idx) norm(Df(:,idx),Q), 1:size(Df,2));
-disp('debug:')
-res
-f
+
 [~,ii]=min(res);
 
 if isinf(Q)
