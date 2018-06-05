@@ -29,8 +29,8 @@ classdef ToyNet < handle
             obj.Y{1} = 0;
             obj.DY{1} = 0;
             obj.Y{2} = zeros(obj.hiddenLayersSize, 1);    % init array Y as matrix with all enries 0
+            obj.Y{3} = zeros(obj.outputLayerSize,1);      % init last output layer
             obj.D{2} = zeros(obj.hiddenLayersSize, 1);    % init array D as matrix with all enries 0
-
             % Build W2, b2 for connections from input layer to first hidden
             W2 = initScaler*rand(obj.hiddenLayersSize, obj.inputLayerSize);
             b2 = initScaler*rand(obj.hiddenLayersSize,1);
@@ -105,17 +105,23 @@ classdef ToyNet < handle
             dYdZ = 0;
             YN = obj.totalNumLayers;
 
-            % Calculate the last layer gradient dY/dZ
+            % Calculate the last layer gradient dY_i/dZ
             obj.DY{YN} = obj.Y{YN}(Yid)*(1-obj.Y{YN}(Yid));
 
             % Calculate the L-1 layer gradient dY_i/dZ
             obj.DY{YN-1} = obj.DY{YN} * obj.arrayWeights{YN}(Yid,:)' .* obj.Y{YN-1} .* (1 - obj.Y{YN-1});
 
+            % Calculate the L-2, L-3, ... , 2 layer gradients w.r.t z
             for i = YN-2:-1:2
-                % Calculate error for dY/dZ
-                dYdZ = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.DY{i+1});
+                % if at the input layer break the loop
+                if i == 1
+                    break;
+                end
+
+                obj.DY{i} = obj.Y{i} .* (1 - obj.Y{i}) .* (obj.arrayWeights{i+1}' * obj.DY{i+1});
             end
-            dYdx = obj.arrayWeights{2}'*dYdZ;
+            % Calculate gradient w.r.t to the input
+            dYdx = obj.arrayWeights{2}'*obj.DY{2};
         end
 
 
