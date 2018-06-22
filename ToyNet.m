@@ -109,7 +109,7 @@ classdef ToyNet < handle
             obj.DY{YN} = obj.Y{YN}(Yid)*(1-obj.Y{YN}(Yid));
 
             % Calculate the L-1 layer gradient dY_i/dZ
-            obj.DY{YN-1} = obj.DY{YN} * obj.arrayWeights{YN}(Yid,:)' .* obj.Y{YN-1} .* (1 - obj.Y{YN-1});
+            obj.DY{YN-1} = obj.DY{YN}* obj.arrayWeights{YN}(Yid,:)' .* obj.Y{YN-1} .* (1 - obj.Y{YN-1});
 
             % Calculate the L-2, L-3, ... , 2 layer gradients w.r.t z
             for i = YN-2:-1:2

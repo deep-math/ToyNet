@@ -59,7 +59,7 @@ subplot(1,4,2);
 digitOrig = reshape(testImg, [28,28]);    % row = 28 x 28 image
 imshow(digitOrig*255,[0 255])      % show the image
 title('original');
-
+norm(perturbedImg -testImg)
 
 subplot(1,4,3);
 digitNoise = reshape(noisyImg, [28,28]);    % row = 28 x 28 image

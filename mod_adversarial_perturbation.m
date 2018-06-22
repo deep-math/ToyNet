@@ -4,11 +4,11 @@
 %                                               %
 %                                               %
 
-function adv = mod_adversarial_perturbation(x,l,Df_base,f_out,tn,eta,opts)
+function adv = mod_adversarial_perturbation(x,l,Df_base,f_out,tn,opts)
     NUM_LABELS = 10;
     OS = 0.02;
     Q = 2;
-    MAX_ITER = 100;
+    MAX_ITER = 50000;
     if(nargin==7)
         if isfield(opts,'labels_limit') NUM_LABELS = opts.labels_limit;end;
         if isfield(opts,'overshoot') OS = opts.overshoot;end;
@@ -21,7 +21,7 @@ function adv = mod_adversarial_perturbation(x,l,Df_base,f_out,tn,eta,opts)
         if isfield(opts,'max_iter') MAX_ITER = opts.max_iter;end;
     end
 
-    Df = @(y,l,idx,eta,tn) Df_base(y,l,idx,eta,tn);
+    Df = @(y,l,idx,tn) Df_base(y,l,idx,tn);
     ff = f_out(x,0,tn);
     ff = ff-ff(l);      % store difference between every classification and classification of interest
     [~,I] = sort(ff,'descend');     % sort in descending order, store indexes of original data placement in I
@@ -38,13 +38,13 @@ function adv = mod_adversarial_perturbation(x,l,Df_base,f_out,tn,eta,opts)
         ff = f_out(x_u,0,tn);
         ff = ff-ff(l);
         idx = [l labels];   % put the label of interest on the first place and sorted indeces follow
-        ddf = Df(x_u,l,idx,eta,tn);
+        ddf = Df(x_u,l,idx,tn);
         dr = project_boundary_polyhedron(ddf,ff(idx),Q);
-
-        x_u = x_u+dr;
+        dr = dr/255;
+        x_u = x_u + dr;
         r = r + dr;
     end
-
+    disp({'max iter:', itr})
     adv.r = (1+OS)*r;
     adv.new_label = f_out(x+(1+OS)*r,1,tn);
     adv.itr = itr;
