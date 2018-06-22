@@ -29,7 +29,6 @@ classdef ToyNet < handle
             obj.Y{1} = 0;
             obj.DY{1} = 0;
             obj.Y{2} = zeros(obj.hiddenLayersSize, 1);    % init array Y as matrix with all enries 0
-            obj.Y{3} = zeros(obj.outputLayerSize,1);      % init last output layer
             obj.D{2} = zeros(obj.hiddenLayersSize, 1);    % init array D as matrix with all enries 0
             % Build W2, b2 for connections from input layer to first hidden
             W2 = initScaler*rand(obj.hiddenLayersSize, obj.inputLayerSize);
